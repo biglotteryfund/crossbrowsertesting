@@ -1,0 +1,23 @@
+{
+  "name": "crossbrowsertesting-v2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js",
+    "format": "npx prettier --write *.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^8.0.0",
+    "faker": "^4.1.0",
+    "lodash": "^4.17.11",
+    "request": "^2.88.0",
+    "selenium-webdriver": "^4.0.0-alpha.4"
+  },
+  "devDependencies": {
+    "prettier": "^1.18.2"
+  }
+}
