@@ -108,18 +108,7 @@ async function stepYourIdea(driver) {
 
 let sessionId = null;
 
-async function awardsForAll() {
-  let driver;
-
-  if (process.env.CI) {
-    driver = new Builder()
-      .usingServer("http://hub.crossbrowsertesting.com:80/wd/hub")
-      .withCapabilities(caps)
-      .build();
-  } else {
-    driver = new Builder().forBrowser("safari").build();
-  }
-
+async function awardsForAll(driver) {
   try {
     if (process.env.CI) {
       await driver.getSession().then(function(session) {
@@ -206,5 +195,20 @@ function setScore(score) {
   });
 }
 
-console.log("Starting test");
-awardsForAll();
+async function startTest() {
+  let driver;
+
+  if (process.env.CI) {
+    driver = new Builder()
+      .usingServer("http://hub.crossbrowsertesting.com:80/wd/hub")
+      .withCapabilities(caps)
+      .build();
+  } else {
+    driver = new Builder().forBrowser("safari").build();
+  }
+
+  console.log("Starting test");
+  await awardsForAll(driver);
+}
+
+startTest();
