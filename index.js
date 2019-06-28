@@ -4,19 +4,6 @@ const { Builder, By, until } = require("selenium-webdriver");
 const faker = require("faker");
 const request = require("request");
 
-const caps = {
-  name: "Awards for all",
-  build: "1.0",
-  // version: "70",
-  // platform: "Windows 10",
-  screen_resolution: "1600x1200",
-  record_video: "true",
-  record_network: "false",
-  browserName: "Edge",
-  username: process.env.CBT_USERNAME,
-  password: process.env.CBT_AUTHKEY
-};
-
 async function login(driver) {
   await driver
     .findElement(By.id("field-username"))
@@ -165,17 +152,24 @@ function setScore(sessionId, score) {
   });
 }
 
-async function startTest() {
-  let driver;
-
-  if (process.env.CI) {
-    driver = new Builder()
-      .usingServer("http://hub.crossbrowsertesting.com:80/wd/hub")
-      .withCapabilities(caps)
-      .build();
-  } else {
-    driver = new Builder().forBrowser("safari").build();
-  }
+async function startTest(name, suiteFn) {
+  const driver = process.env.CI
+    ? new Builder()
+        .usingServer("http://hub.crossbrowsertesting.com:80/wd/hub")
+        .withCapabilities({
+          name: name,
+          build: "1.0",
+          // version: "70",
+          // platform: "Windows 10",
+          screen_resolution: "1600x1200",
+          record_video: "true",
+          record_network: "false",
+          browserName: "Edge",
+          username: process.env.CBT_USERNAME,
+          password: process.env.CBT_AUTHKEY
+        })
+        .build()
+    : new Builder().forBrowser("safari").build();
 
   driver.getSession().then(async function(session) {
     const sessionId = session.id_;
@@ -189,7 +183,7 @@ async function startTest() {
     console.log("Starting test");
 
     try {
-      await awardsForAll(driver);
+      await suiteFn(driver);
 
       setScore(sessionId, "pass").then(function() {
         console.log("SUCCESS! set score to pass");
@@ -207,4 +201,4 @@ async function startTest() {
   });
 }
 
-startTest();
+startTest("Awards for all", awardsForAll);
