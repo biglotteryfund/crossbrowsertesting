@@ -1,122 +1,7 @@
 "use strict";
 require("dotenv").config();
-const { Builder, By, until } = require("selenium-webdriver");
-const faker = require("faker");
+const { Builder } = require("selenium-webdriver");
 const request = require("request");
-
-async function login(driver) {
-  await driver
-    .findElement(By.id("field-username"))
-    .sendKeys(process.env.TEST_USERNAME);
-
-  await driver
-    .findElement(By.id("field-password"))
-    .sendKeys(process.env.TEST_PASSWORD);
-
-  await driver
-    .findElement(By.css('.form-actions input[type="submit"]'))
-    .click();
-}
-
-async function eligibilityStep(driver) {
-  await driver
-    .findElement(By.xpath("//label[contains(text(), 'Yes')]"))
-    .click();
-  await driver
-    .findElement(By.css('.form-actions input[type="submit"]'))
-    .click();
-
-  await driver.sleep(1000);
-}
-
-async function submitStep(driver) {
-  await driver
-    .findElement(By.css('.form-actions input[type="submit"]'))
-    .click();
-}
-
-async function stepProjectDetails(driver) {
-  await driver
-    .findElement(By.id("field-projectName"))
-    .sendKeys("My Application");
-
-  await driver
-    .findElement(By.css("input[name='projectDateRange[startDate][day]']"))
-    .sendKeys("1");
-  await driver
-    .findElement(By.css("input[name='projectDateRange[startDate][month]']"))
-    .sendKeys("6");
-  await driver
-    .findElement(By.css("input[name='projectDateRange[startDate][year]']"))
-    .sendKeys("2020");
-
-  await driver
-    .findElement(By.css("input[name='projectDateRange[endDate][day]']"))
-    .sendKeys("1");
-  await driver
-    .findElement(By.css("input[name='projectDateRange[endDate][month]']"))
-    .sendKeys("6");
-  await driver
-    .findElement(By.css("input[name='projectDateRange[endDate][year]']"))
-    .sendKeys("2020");
-}
-
-async function stepProjectCountry(driver) {
-  await driver.findElement(By.css("input[value='scotland']")).click();
-}
-
-async function stepProjectLocation(driver) {
-  await driver
-    .findElement(
-      By.css("#field-projectLocation > optgroup > option[value=highlands]")
-    )
-    .click();
-
-  await driver
-    .findElement(By.id("field-projectLocationDescription"))
-    .sendKeys(faker.lorem.sentence());
-
-  await driver.findElement(By.id("field-projectPostcode")).sendKeys("KW8 6JF");
-}
-
-async function stepYourIdea(driver) {
-  await driver
-    .findElement(By.id("field-yourIdeaProject"))
-    .sendKeys(faker.lorem.words(51));
-
-  await driver
-    .findElement(By.id("field-yourIdeaPriorities"))
-    .sendKeys(faker.lorem.words(51));
-
-  await driver
-    .findElement(By.id("field-yourIdeaCommunity"))
-    .sendKeys(faker.lorem.words(51));
-}
-
-async function awardsForAll(driver) {
-  await driver.get(`${process.env.TEST_BASE_URL}/apply/awards-for-all/new`);
-
-  await driver
-    .manage()
-    .window()
-    .maximize();
-
-  await driver.findElement(By.css(".cookie-consent__actions .btn")).click();
-  await login(driver);
-
-  await driver.wait(until.titleContains("Project details"));
-  await stepProjectDetails(driver);
-  await submitStep(driver);
-  await driver.wait(until.titleContains("Project country"));
-  await stepProjectCountry(driver);
-  await submitStep(driver);
-  await driver.wait(until.titleContains("Project location"));
-  await stepProjectLocation(driver);
-  await submitStep(driver);
-  await driver.wait(until.titleContains("Your idea"));
-  await stepYourIdea(driver);
-  await submitStep(driver);
-}
 
 function setScore(sessionId, score) {
   return new Promise((resolve, fulfill) => {
@@ -152,25 +37,7 @@ function setScore(sessionId, score) {
   });
 }
 
-async function startTest(name, suiteFn) {
-  const driver = process.env.CI
-    ? new Builder()
-        .usingServer("http://hub.crossbrowsertesting.com:80/wd/hub")
-        .withCapabilities({
-          name: name,
-          build: "1.0",
-          // version: "70",
-          // platform: "Windows 10",
-          screen_resolution: "1600x1200",
-          record_video: "true",
-          record_network: "false",
-          browserName: "Edge",
-          username: process.env.CBT_USERNAME,
-          password: process.env.CBT_AUTHKEY
-        })
-        .build()
-    : new Builder().forBrowser("safari").build();
-
+async function startTest(driver, suiteFn) {
   driver.getSession().then(async function(session) {
     const sessionId = session.id_;
     console.log("Session ID: ", sessionId);
@@ -180,7 +47,6 @@ async function startTest(name, suiteFn) {
           sessionId
       );
     }
-    console.log("Starting test");
 
     try {
       await suiteFn(driver);
@@ -201,4 +67,36 @@ async function startTest(name, suiteFn) {
   });
 }
 
-startTest("Awards for all", awardsForAll);
+const awardsForAll = require("./awards-for-all");
+
+if (process.env.CI) {
+  [
+    { browserName: "Edge", version: "18", platform: "Windows 10" },
+    { browserName: "Internet Explorer", version: "11", platform: "Windows 8.1" }
+  ].forEach(browser => {
+    const driver = new Builder()
+      .usingServer("http://hub.crossbrowsertesting.com:80/wd/hub")
+      .withCapabilities({
+        name: "Awards for all",
+        build: "1.0",
+        browserName: browser.browserName,
+        version: browser.version,
+        platform: browser.platform,
+        screen_resolution: "1600x1200",
+        record_video: "true",
+        record_network: "false",
+        username: process.env.CBT_USERNAME,
+        password: process.env.CBT_AUTHKEY
+      })
+      .build();
+
+    console.log(
+      `Starting test for ${browser.browserName} ${browser.version} on ${browser.platform}`
+    );
+    startTest(driver, awardsForAll);
+  });
+} else {
+  const driver = new Builder().forBrowser("safari").build();
+  console.log("Starting local test");
+  startTest(driver, awardsForAll);
+}
