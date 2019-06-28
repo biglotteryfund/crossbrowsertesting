@@ -106,20 +106,7 @@ async function stepYourIdea(driver) {
     .sendKeys(faker.lorem.words(51));
 }
 
-let sessionId = null;
-
 async function awardsForAll(driver) {
-  if (process.env.CI) {
-    await driver.getSession().then(function(session) {
-      sessionId = session.id_; //need for API calls
-      console.log("Session ID: ", sessionId);
-      console.log(
-        "See your test run at: https://app.crossbrowsertesting.com/selenium/" +
-          sessionId
-      );
-    });
-  }
-
   await driver.get(`${process.env.TEST_BASE_URL}/apply/awards-for-all/new`);
 
   await driver
@@ -144,7 +131,7 @@ async function awardsForAll(driver) {
   await submitStep(driver);
 }
 
-function setScore(score) {
+function setScore(sessionId, score) {
   return new Promise((resolve, fulfill) => {
     let result = { error: false, message: null };
 
@@ -170,9 +157,8 @@ function setScore(score) {
         }
       ).auth(process.env.CBT_USERNAME, process.env.CBT_AUTHKEY);
     } else {
-      result.error = true;
-      result.message = "Session Id was not defined";
-      resolve(result);
+      result.error = false;
+      result.message = "success";
     }
 
     result.error ? fulfill("Fail") : resolve("Pass");
@@ -191,25 +177,34 @@ async function startTest() {
     driver = new Builder().forBrowser("safari").build();
   }
 
-  console.log("Starting test");
+  driver.getSession().then(async function(session) {
+    const sessionId = session.id_;
+    console.log("Session ID: ", sessionId);
+    if (process.env.CI) {
+      console.log(
+        "See your test run at: https://app.crossbrowsertesting.com/selenium/" +
+          sessionId
+      );
+    }
+    console.log("Starting test");
 
-  try {
-    await awardsForAll(driver);
+    try {
+      await awardsForAll(driver);
 
-    setScore("pass").then(function(result) {
-      console.log(result);
-      console.log("SUCCESS! set score to pass");
-    });
+      setScore(sessionId, "pass").then(function() {
+        console.log("SUCCESS! set score to pass");
+      });
 
-    driver.quit();
-  } catch (err) {
-    console.error("Something went wrong!\n", err.stack, "\n");
-    driver.quit();
-    setScore("fail").then(function(result) {
-      console.log(result);
-      console.log("FAILURE! set score to fail");
-    });
-  }
+      driver.quit();
+    } catch (err) {
+      console.error("Something went wrong!\n", err.stack, "\n");
+      driver.quit();
+      setScore(sessionId, "fail").then(function(result) {
+        console.log(result);
+        console.log("FAILURE! set score to fail");
+      });
+    }
+  });
 }
 
 startTest();
