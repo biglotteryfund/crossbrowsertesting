@@ -109,55 +109,39 @@ async function stepYourIdea(driver) {
 let sessionId = null;
 
 async function awardsForAll(driver) {
-  try {
-    if (process.env.CI) {
-      await driver.getSession().then(function(session) {
-        sessionId = session.id_; //need for API calls
-        console.log("Session ID: ", sessionId);
-        console.log(
-          "See your test run at: https://app.crossbrowsertesting.com/selenium/" +
-            sessionId
-        );
-      });
-    }
-
-    await driver.get(`${process.env.TEST_BASE_URL}/apply/awards-for-all/new`);
-
-    await driver
-      .manage()
-      .window()
-      .maximize();
-
-    await driver.findElement(By.css(".cookie-consent__actions .btn")).click();
-    await login(driver);
-
-    await driver.wait(until.titleContains("Project details"));
-    await stepProjectDetails(driver);
-    await submitStep(driver);
-    await driver.wait(until.titleContains("Project country"));
-    await stepProjectCountry(driver);
-    await submitStep(driver);
-    await driver.wait(until.titleContains("Project location"));
-    await stepProjectLocation(driver);
-    await submitStep(driver);
-    await driver.wait(until.titleContains("Your idea"));
-    await stepYourIdea(driver);
-    await submitStep(driver);
-
-    setScore("pass").then(function(result) {
-      console.log(result);
-      console.log("SUCCESS! set score to pass");
-    });
-
-    driver.quit();
-  } catch (err) {
-    console.error("Something went wrong!\n", err.stack, "\n");
-    driver.quit();
-    setScore("fail").then(function(result) {
-      console.log(result);
-      console.log("FAILURE! set score to fail");
+  if (process.env.CI) {
+    await driver.getSession().then(function(session) {
+      sessionId = session.id_; //need for API calls
+      console.log("Session ID: ", sessionId);
+      console.log(
+        "See your test run at: https://app.crossbrowsertesting.com/selenium/" +
+          sessionId
+      );
     });
   }
+
+  await driver.get(`${process.env.TEST_BASE_URL}/apply/awards-for-all/new`);
+
+  await driver
+    .manage()
+    .window()
+    .maximize();
+
+  await driver.findElement(By.css(".cookie-consent__actions .btn")).click();
+  await login(driver);
+
+  await driver.wait(until.titleContains("Project details"));
+  await stepProjectDetails(driver);
+  await submitStep(driver);
+  await driver.wait(until.titleContains("Project country"));
+  await stepProjectCountry(driver);
+  await submitStep(driver);
+  await driver.wait(until.titleContains("Project location"));
+  await stepProjectLocation(driver);
+  await submitStep(driver);
+  await driver.wait(until.titleContains("Your idea"));
+  await stepYourIdea(driver);
+  await submitStep(driver);
 }
 
 function setScore(score) {
@@ -208,7 +192,24 @@ async function startTest() {
   }
 
   console.log("Starting test");
-  await awardsForAll(driver);
+
+  try {
+    await awardsForAll(driver);
+
+    setScore("pass").then(function(result) {
+      console.log(result);
+      console.log("SUCCESS! set score to pass");
+    });
+
+    driver.quit();
+  } catch (err) {
+    console.error("Something went wrong!\n", err.stack, "\n");
+    driver.quit();
+    setScore("fail").then(function(result) {
+      console.log(result);
+      console.log("FAILURE! set score to fail");
+    });
+  }
 }
 
 startTest();
