@@ -98,7 +98,7 @@ if (process.env.CI) {
       .usingServer("http://hub.crossbrowsertesting.com:80/wd/hub")
       .withCapabilities({
         name: "Awards for all",
-        build: "1.0",
+        build: process.env.TRAVIS_BUILD_NUMBER || "dev",
         browserName: browser.browserName,
         version: browser.version ? browser.version : null,
         platform: browser.platform,
