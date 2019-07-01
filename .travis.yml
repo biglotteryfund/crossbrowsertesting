@@ -1,7 +1,6 @@
 # Defaults
 dist: xenial
 language: node_js
-node_js: 'lts/*'
 
 # Install dependencies
 install: npm ci --quiet --prefer-offline
