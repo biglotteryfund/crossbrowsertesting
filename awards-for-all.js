@@ -2,6 +2,7 @@
 const { By, until } = require("selenium-webdriver");
 const faker = require("faker");
 const assert = require("assert");
+const times = require("lodash/times");
 
 async function login(driver) {
   await driver
@@ -38,7 +39,7 @@ async function deleteApplication(driver) {
 
 async function stepProjectDetails(driver) {
   await driver
-    .findElement(By.id("field-projectName"))
+    .wait(until.elementLocated(By.id("field-projectName")))
     .sendKeys("My Application");
 
   await driver
@@ -63,13 +64,17 @@ async function stepProjectDetails(driver) {
 }
 
 async function stepProjectCountry(driver) {
-  await driver.findElement(By.css("input[value='scotland']")).click();
+  await driver
+    .wait(until.elementLocated(By.css("input[value='scotland']")))
+    .click();
 }
 
 async function stepProjectLocation(driver) {
   await driver
-    .findElement(
-      By.css("#field-projectLocation > optgroup > option[value=highlands]")
+    .wait(
+      until.elementLocated(
+        By.css("#field-projectLocation > optgroup > option[value=highlands]")
+      )
     )
     .click();
 
@@ -82,7 +87,7 @@ async function stepProjectLocation(driver) {
 
 async function stepYourIdea(driver) {
   await driver
-    .findElement(By.id("field-yourIdeaProject"))
+    .wait(until.eleme(By.id("field-yourIdeaProject")))
     .sendKeys(faker.lorem.words(51));
 
   await driver
@@ -96,7 +101,7 @@ async function stepYourIdea(driver) {
 
 async function stepProjectCosts(driver) {
   await driver
-    .findElement(By.id("projectBudget[0][item]"))
+    .wait(until.elementLocated(By.id("projectBudget[0][item]")))
     .sendKeys("Example item 1");
 
   await driver.findElement(By.id("projectBudget[0][cost]")).sendKeys("1500");
@@ -117,12 +122,39 @@ async function stepProjectCosts(driver) {
 }
 
 async function stepBeneficiaries(driver) {
-  await driver.findElement(By.id("field-beneficiariesGroupsCheck-2")).click();
+  await driver
+    .wait(until.elementLocated(By.id("field-beneficiariesGroupsCheck-2")))
+    .click();
+}
+
+async function lookupTestAddress(driver) {
+  const TEST_POSTCODE = "ID1 1QD";
+  await driver
+    .findElement(By.css("input[name=postcode-lookup]"))
+    .sendKeys(TEST_POSTCODE);
+
+  await driver.findElement(By.css(".address-lookup__field .btn")).click();
+
+  await driver.wait(until.elementLocated(By.id("address-selection")));
+
+  await driver
+    .findElement(By.css("#address-selection option:nth-child(2)"))
+    .click();
+
+  await driver.wait(until.elementLocated(By.css(".existing-data__address")));
+  const addressText = await driver
+    .findElement(By.css(".existing-data__address"))
+    .getText();
+
+  assert(
+    addressText === "2 Barons Court RoadLONDONID1 1QD",
+    "Address is selected"
+  );
 }
 
 async function stepOrganisationDetails(driver) {
   await driver
-    .findElement(By.id("field-organisationLegalName"))
+    .wait(until.elementLocated(By.id("field-organisationLegalName")))
     .sendKeys(faker.company.companyName());
 
   await driver
@@ -132,32 +164,77 @@ async function stepOrganisationDetails(driver) {
     .findElement(By.css("input[name='organisationStartDate[year]']"))
     .sendKeys(1986);
 
-  const summaryEl = await driver.findElement(
-    By.css('[data-testid="manual-address"]')
-  );
-
-  await summaryEl.click();
-  await summaryEl.click();
-
-  await driver
-    .findElement(By.id("field-organisationAddress[line1]"))
-    .sendKeys(faker.address.streetAddress());
-
-  await driver
-    .findElement(By.id("field-organisationAddress[townCity]"))
-    .sendKeys(faker.address.city());
-
-  await driver
-    .findElement(By.id("field-organisationAddress[county]"))
-    .sendKeys(faker.address.county());
-
-  await driver
-    .findElement(By.id("field-organisationAddress[postcode]"))
-    .sendKeys("B15 1TR");
+  await lookupTestAddress(driver);
 }
 
+async function stepOrganisationType(driver) {
+  await driver
+    .wait(until.elementLocated(By.id("field-organisationType-1")))
+    .click();
+}
+
+async function stepOrganisationFinances(driver) {
+  await driver
+    .wait(until.elementLocated(By.css("input[name='accountingYearDate[day]']")))
+    .sendKeys("31");
+
+  await driver
+    .findElement(By.css("input[name='accountingYearDate[month]']"))
+    .sendKeys("03");
+
+  await driver.findElement(By.id("field-totalIncomeYear")).sendKeys("250000");
+}
+
+async function stepSeniorContact(driver) {
+  await driver
+    .wait(until.elementLocated(By.id("field-seniorContactRole-1")))
+    .click();
+
+  await driver
+    .findElement(By.id("field-seniorContactName-firstName"))
+    .sendKeys(faker.name.firstName());
+  await driver
+    .findElement(By.id("field-seniorContactName-lastName"))
+    .sendKeys(faker.name.lastName());
+
+  await driver
+    .findElement(By.css("input[name='seniorContactDateOfBirth[day]']"))
+    .sendKeys("01");
+  await driver
+    .findElement(By.css("input[name='seniorContactDateOfBirth[month]']"))
+    .sendKeys("02");
+  await driver
+    .findElement(By.css("input[name='seniorContactDateOfBirth[year]']"))
+    .sendKeys("1976");
+
+  await lookupTestAddress(driver);
+
+  await driver
+    .findElement(By.id("option-seniorContactAddressHistory-yes"))
+    .click();
+
+  await driver
+    .findElement(By.id("field-seniorContactEmail"))
+    .sendKeys(faker.internet.exampleEmail());
+
+  await driver
+    .findElement(By.id("field-seniorContactPhone"))
+    .sendKeys(faker.phone.phoneNumber());
+}
+
+/**
+ * This test suite creates an application against the test site and deletes it at the end of the test
+ * Rather than aiming to be a full run through of the form this suite it instead
+ * focuses on the more complex interactions that are likely to have cross browser issues.
+ * Notably:
+ * - Idea questions
+ * - Budget question
+ * - Address lookup functionality
+ *
+ * Note: An additional end-to-end run through is handled by Cypress tests in the main app
+ */
 module.exports = async function awardsForAll(driver) {
-  await driver.get(`${process.env.TEST_BASE_URL}/apply/awards-for-all/new`);
+  await driver.get(`${process.env.TEST_BASE_URL}/apply/awards-for-all`);
 
   await driver
     .manage()
@@ -173,41 +250,57 @@ module.exports = async function awardsForAll(driver) {
   await login(driver);
   await submitStep(driver);
 
-  await driver.wait(until.titleContains("Project details"));
+  await driver
+    .wait(until.elementLocated(By.partialLinkText("Start new application")))
+    .click();
+
+  // Eligibility checker
+  await Promise.all(
+    times(5, async index => {
+      await driver.wait(until.titleContains(`Step ${index + 1} of 5`));
+      await driver.findElement(By.id("field-eligibility-1")).click();
+      return submitStep(driver);
+    })
+  );
+
+  await driver
+    .wait(until.elementLocated(By.partialLinkText("Start your application")))
+    .click();
+
   await stepProjectDetails(driver);
   await submitStep(driver);
 
-  await driver.wait(until.titleContains("Project country"));
   await stepProjectCountry(driver);
   await submitStep(driver);
 
-  await driver.wait(until.titleContains("Project location"));
   await stepProjectLocation(driver);
   await submitStep(driver);
 
-  await driver.wait(until.titleContains("Your idea"));
   await stepYourIdea(driver);
   await submitStep(driver);
 
-  await driver.wait(until.titleContains("Project costs"));
   await stepProjectCosts(driver);
   await submitStep(driver);
 
-  // await driver.get(
-  //   `${process.env.TEST_BASE_URL}/apply/awards-for-all/beneficiaries/1`
-  // );
-  await driver.wait(until.titleContains("Specific groups of people"));
   await stepBeneficiaries(driver);
   await submitStep(driver);
 
-  await driver.wait(until.titleContains("Organisation details"));
   await stepOrganisationDetails(driver);
   await submitStep(driver);
 
-  await driver.wait(until.titleContains("Organisation type"));
+  await stepOrganisationType(driver);
+  await submitStep(driver);
+
+  await stepOrganisationFinances(driver);
+  await submitStep(driver);
+
+  await stepSeniorContact(driver);
+  await submitStep(driver);
+
+  await driver.wait(until.titleContains("Main contact"));
 
   // Delete application before ending the test
   await deleteApplication(driver);
 
-  await driver.sleep(2000);
+  await driver.sleep(3000);
 };
