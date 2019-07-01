@@ -214,7 +214,7 @@ async function stepSeniorContact(driver) {
 
   await driver
     .findElement(By.id("field-seniorContactPhone"))
-    .sendKeys(faker.phone.phoneNumber());
+    .sendKeys("0345 4 10 20 30");
 }
 
 /**
