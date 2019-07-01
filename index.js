@@ -4,7 +4,7 @@ const { Builder } = require("selenium-webdriver");
 const request = require("request");
 
 function setScore(sessionId, score) {
-  return new Promise((resolve, fulfill) => {
+  return new Promise((resolve, reject) => {
     let result = { error: false, message: null };
 
     if (sessionId) {
@@ -33,7 +33,7 @@ function setScore(sessionId, score) {
       result.message = "success";
     }
 
-    result.error ? fulfill("Fail") : resolve("Pass");
+    result.error ? reject("Fail") : resolve("Pass");
   });
 }
 
@@ -78,7 +78,12 @@ const awardsForAll = require("./awards-for-all");
 if (process.env.CI) {
   [
     { browserName: "Edge", version: "18", platform: "Windows 10" },
-    { browserName: "Internet Explorer", version: "11", platform: "Windows 8.1" }
+    {
+      browserName: "Internet Explorer",
+      version: "11",
+      platform: "Windows 8.1"
+    },
+    { browserName: "Chrome", platform: "Windows 10" }
   ].forEach(browser => {
     const driver = new Builder()
       .usingServer("http://hub.crossbrowsertesting.com:80/wd/hub")
@@ -86,7 +91,7 @@ if (process.env.CI) {
         name: "Awards for all",
         build: "1.0",
         browserName: browser.browserName,
-        version: browser.version,
+        version: browser.version ? browser.version : null,
         platform: browser.platform,
         screen_resolution: "1600x1200",
         record_video: "true",
@@ -97,7 +102,7 @@ if (process.env.CI) {
       .build();
 
     console.log(
-      `Starting test for ${browser.browserName} ${browser.version} on ${browser.platform}`
+      `Starting test for ${browser.browserName} on ${browser.platform}`
     );
     startTest(driver, awardsForAll);
   });
