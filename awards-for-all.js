@@ -21,8 +21,9 @@ async function submitStep(driver) {
 
 async function deleteApplication(driver) {
   await driver.get(`${process.env.TEST_BASE_URL}/apply/awards-for-all`);
+
   await driver
-    .findElement(By.css('[data-testid="delete-application"]'))
+    .wait(until.elementLocated(By.css('[data-testid="delete-application"]')))
     .click();
 
   await driver.wait(

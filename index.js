@@ -76,15 +76,24 @@ async function startTest(driver, suiteFn) {
 const awardsForAll = require("./awards-for-all");
 
 if (process.env.CI) {
-  [
-    { browserName: "Edge", version: "18", platform: "Windows 10" },
+  const browserVersions = [
+    {
+      browserName: "Chrome",
+      platform: "Windows 10"
+    },
+    {
+      browserName: "Edge",
+      version: "18",
+      platform: "Windows 10"
+    },
     {
       browserName: "Internet Explorer",
       version: "11",
       platform: "Windows 8.1"
-    },
-    { browserName: "Chrome", platform: "Windows 10" }
-  ].forEach(browser => {
+    }
+  ];
+
+  browserVersions.forEach(browser => {
     const driver = new Builder()
       .usingServer("http://hub.crossbrowsertesting.com:80/wd/hub")
       .withCapabilities({
