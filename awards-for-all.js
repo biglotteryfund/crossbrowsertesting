@@ -19,24 +19,6 @@ async function submitStep(driver) {
     .click();
 }
 
-async function deleteApplication(driver) {
-  await driver.get(`${process.env.TEST_BASE_URL}/apply/awards-for-all`);
-
-  await driver
-    .wait(until.elementLocated(By.css('[data-testid="delete-application"]')))
-    .click();
-
-  await driver.wait(
-    until.titleContains("Are you sure you want to delete your application?")
-  );
-
-  await driver
-    .findElement(By.css('.form-actions input[type="submit"]'))
-    .click();
-
-  await driver.wait(until.titleContains("Your applications"));
-}
-
 async function stepProjectDetails(driver) {
   await driver
     .wait(until.elementLocated(By.id("field-projectName")))
@@ -218,8 +200,7 @@ async function stepSeniorContact(driver) {
 }
 
 /**
- * This test suite creates an application against the test site and deletes it at the end of the test
- * Rather than aiming to be a full run through of the form this suite it instead
+ * Rather than aiming to be a full run through of the form, this suite instead
  * focuses on the more complex interactions that are likely to have cross browser issues.
  * Notably:
  * - Idea questions
@@ -276,10 +257,5 @@ module.exports = async function awardsForAll(driver) {
   await submitStep(driver);
 
   await driver.wait(until.titleContains("Main contact"));
-  await driver.sleep(1000);
-
-  // Delete application before ending the test
-  await deleteApplication(driver);
-
   await driver.sleep(1000);
 };
