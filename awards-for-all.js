@@ -2,7 +2,6 @@
 const { By, until } = require("selenium-webdriver");
 const faker = require("faker");
 const assert = require("assert");
-const times = require("lodash/times");
 
 async function login(driver) {
   await driver
@@ -87,7 +86,7 @@ async function stepProjectLocation(driver) {
 
 async function stepYourIdea(driver) {
   await driver
-    .wait(until.eleme(By.id("field-yourIdeaProject")))
+    .wait(until.elementLocated(By.id("field-yourIdeaProject")))
     .sendKeys(faker.lorem.words(51));
 
   await driver
@@ -135,21 +134,16 @@ async function lookupTestAddress(driver) {
 
   await driver.findElement(By.css(".address-lookup__field .btn")).click();
 
-  await driver.wait(until.elementLocated(By.id("address-selection")));
+  const addressSelect = await driver.wait(
+    until.elementLocated(By.id("address-selection"))
+  );
+  await driver.executeScript("arguments[0].scrollIntoView();", addressSelect);
+
+  await driver.sleep(1500);
 
   await driver
     .findElement(By.css("#address-selection option:nth-child(2)"))
     .click();
-
-  await driver.wait(until.elementLocated(By.css(".existing-data__address")));
-  const addressText = await driver
-    .findElement(By.css(".existing-data__address"))
-    .getText();
-
-  assert(
-    addressText === "2 Barons Court RoadLONDONID1 1QD",
-    "Address is selected"
-  );
 }
 
 async function stepOrganisationDetails(driver) {
@@ -234,7 +228,7 @@ async function stepSeniorContact(driver) {
  * Note: An additional end-to-end run through is handled by Cypress tests in the main app
  */
 module.exports = async function awardsForAll(driver) {
-  await driver.get(`${process.env.TEST_BASE_URL}/apply/awards-for-all`);
+  await driver.get(`${process.env.TEST_BASE_URL}/apply/awards-for-all/new`);
 
   await driver
     .manage()
@@ -249,23 +243,6 @@ module.exports = async function awardsForAll(driver) {
 
   await login(driver);
   await submitStep(driver);
-
-  await driver
-    .wait(until.elementLocated(By.partialLinkText("Start new application")))
-    .click();
-
-  // Eligibility checker
-  await Promise.all(
-    times(5, async index => {
-      await driver.wait(until.titleContains(`Step ${index + 1} of 5`));
-      await driver.findElement(By.id("field-eligibility-1")).click();
-      return submitStep(driver);
-    })
-  );
-
-  await driver
-    .wait(until.elementLocated(By.partialLinkText("Start your application")))
-    .click();
 
   await stepProjectDetails(driver);
   await submitStep(driver);
@@ -302,5 +279,5 @@ module.exports = async function awardsForAll(driver) {
   // Delete application before ending the test
   await deleteApplication(driver);
 
-  await driver.sleep(3000);
+  await driver.sleep(1000);
 };

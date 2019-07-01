@@ -59,10 +59,16 @@ async function startTest(driver, suiteFn) {
     } catch (err) {
       console.error("Something went wrong!\n", err.stack, "\n");
       driver.quit();
-      setScore(sessionId, "fail").then(function(result) {
-        console.log(result);
-        console.log("FAILURE! set score to fail");
-      });
+
+      setScore(sessionId, "fail")
+        .then(function() {
+          console.log("FAILURE! set score to fail");
+          process.exit(1);
+        })
+        .catch(scoreErr => {
+          console.error("Failed to set status!\n", scoreErr.stack, "\n");
+          process.exit(1);
+        });
     }
   });
 }
