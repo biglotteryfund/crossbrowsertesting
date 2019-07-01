@@ -278,7 +278,7 @@ module.exports = async function awardsForAll(driver) {
   await driver.wait(until.titleContains("Main contact"));
 
   // Delete application before ending the test
-  await deleteApplication(driver);
+  // await deleteApplication(driver);
 
   await driver.sleep(1000);
 };
