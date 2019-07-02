@@ -1,10 +1,15 @@
 "use strict";
+const assert = require("assert");
 const path = require("path");
+const faker = require("faker");
 const { By, until } = require("selenium-webdriver");
 const remote = require("selenium-webdriver/remote");
 
-const faker = require("faker");
-const assert = require("assert");
+async function submitStep(driver) {
+  await driver
+    .findElement(By.css('.form-actions input[type="submit"]'))
+    .click();
+}
 
 async function login(driver) {
   await driver
@@ -16,12 +21,6 @@ async function login(driver) {
     .sendKeys(process.env.TEST_PASSWORD);
 
   await submitStep(driver);
-}
-
-async function submitStep(driver) {
-  await driver
-    .findElement(By.css('.form-actions input[type="submit"]'))
-    .click();
 }
 
 async function stepProjectDetails(driver) {
@@ -338,14 +337,9 @@ async function sectionTerms(driver) {
 }
 
 /**
- * Rather than aiming to be a full run through of the form, this suite instead
- * focuses on the more complex interactions that are likely to have cross browser issues.
- * Notably:
- * - Idea questions
- * - Budget question
- * - Address lookup functionality
- *
- * Note: An additional end-to-end run through is handled by Cypress tests in the main app
+ * Performs a test application submission (current only in Scotland as that is the first to open)
+ * Goes up to the point of completing an application but does not submit.
+ * Note: An additional end-to-end run through is handled by Cypress in the main app
  */
 module.exports = async function awardsForAll(driver) {
   await driver.get(`${process.env.TEST_BASE_URL}/apply/awards-for-all/new`);
