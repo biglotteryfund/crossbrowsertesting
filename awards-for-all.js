@@ -11,6 +11,8 @@ async function login(driver) {
   await driver
     .findElement(By.id("field-password"))
     .sendKeys(process.env.TEST_PASSWORD);
+
+  await submitStep(driver);
 }
 
 async function submitStep(driver) {
@@ -68,9 +70,13 @@ async function stepProjectLocation(driver) {
 }
 
 async function stepYourIdea(driver) {
-  await driver
-    .wait(until.elementLocated(By.id("field-yourIdeaProject")))
-    .sendKeys(faker.lorem.words(51));
+  await driver.wait(
+    until.elementLocated(By.css("label[for='field-yourIdeaProject']"))
+  );
+
+  const inputEl = await driver.findElement(By.id("field-yourIdeaProject"));
+  await inputEl.sendKeys(faker.lorem.words(51));
+  await driver.executeScript("arguments[0].scrollIntoView();", inputEl);
 
   await driver
     .findElement(By.id("field-yourIdeaPriorities"))
@@ -103,13 +109,55 @@ async function stepProjectCosts(driver) {
   await driver.findElement(By.id("field-projectTotalCosts")).sendKeys("20000");
 }
 
-async function stepBeneficiaries(driver) {
-  await driver
-    .wait(until.elementLocated(By.id("field-beneficiariesGroupsCheck-2")))
-    .click();
+async function sectionProject(driver) {
+  await stepProjectDetails(driver);
+  await submitStep(driver);
+
+  await stepProjectCountry(driver);
+  await submitStep(driver);
+
+  await stepProjectLocation(driver);
+  await submitStep(driver);
+
+  await stepYourIdea(driver);
+  await submitStep(driver);
+
+  await stepProjectCosts(driver);
+  await submitStep(driver);
 }
 
-async function lookupTestAddress(driver) {
+async function sectionBeneficiaries(driver) {
+  await driver
+    .wait(until.elementLocated(By.id("field-beneficiariesGroupsCheck-1")))
+    .click();
+
+  await submitStep(driver);
+
+  await driver
+    .wait(until.elementLocated(By.css("input[value='gender']")))
+    .click();
+
+  await driver.findElement(By.css("input[value='age']")).click();
+
+  await submitStep(driver);
+
+  await driver
+    .wait(until.elementLocated(By.id("field-beneficiariesGroupsGender-2")))
+    .click();
+  await driver
+    .wait(until.elementLocated(By.id("field-beneficiariesGroupsGender-4")))
+    .click();
+
+  await submitStep(driver);
+
+  await driver
+    .wait(until.elementLocated(By.id("field-beneficiariesGroupsAge-3")))
+    .click();
+
+  await submitStep(driver);
+}
+
+async function lookupTestAddress(driver, selectItem = 1) {
   const TEST_POSTCODE = "ID1 1QD";
   await driver
     .findElement(By.css("input[name=postcode-lookup]"))
@@ -125,11 +173,13 @@ async function lookupTestAddress(driver) {
   await driver.sleep(1500);
 
   await driver
-    .findElement(By.css("#address-selection option:nth-child(2)"))
+    .findElement(
+      By.css(`#address-selection option:nth-child(${selectItem + 1})`)
+    )
     .click();
 }
 
-async function stepOrganisationDetails(driver) {
+async function sectionOrganisation(driver) {
   await driver
     .wait(until.elementLocated(By.id("field-organisationLegalName")))
     .sendKeys(faker.company.companyName());
@@ -141,16 +191,16 @@ async function stepOrganisationDetails(driver) {
     .findElement(By.css("input[name='organisationStartDate[year]']"))
     .sendKeys(1986);
 
-  await lookupTestAddress(driver);
-}
+  await lookupTestAddress(driver, 1);
 
-async function stepOrganisationType(driver) {
+  await submitStep(driver);
+
   await driver
     .wait(until.elementLocated(By.id("field-organisationType-1")))
     .click();
-}
 
-async function stepOrganisationFinances(driver) {
+  await submitStep(driver);
+
   await driver
     .wait(until.elementLocated(By.css("input[name='accountingYearDate[day]']")))
     .sendKeys("31");
@@ -160,9 +210,11 @@ async function stepOrganisationFinances(driver) {
     .sendKeys("03");
 
   await driver.findElement(By.id("field-totalIncomeYear")).sendKeys("250000");
+
+  await submitStep(driver);
 }
 
-async function stepSeniorContact(driver) {
+async function sectionSeniorContact(driver) {
   await driver
     .wait(until.elementLocated(By.id("field-seniorContactRole-1")))
     .click();
@@ -184,7 +236,7 @@ async function stepSeniorContact(driver) {
     .findElement(By.css("input[name='seniorContactDateOfBirth[year]']"))
     .sendKeys("1976");
 
-  await lookupTestAddress(driver);
+  await lookupTestAddress(driver, 2);
 
   await driver
     .findElement(By.id("option-seniorContactAddressHistory-yes"))
@@ -197,6 +249,59 @@ async function stepSeniorContact(driver) {
   await driver
     .findElement(By.id("field-seniorContactPhone"))
     .sendKeys("0345 4 10 20 30");
+
+  await submitStep(driver);
+}
+
+async function sectionMainContact(driver) {
+  await driver
+    .wait(until.elementLocated(By.id("field-mainContactName-firstName")))
+    .sendKeys(faker.name.firstName());
+
+  await driver
+    .findElement(By.id("field-mainContactName-lastName"))
+    .sendKeys(faker.name.lastName());
+
+  await driver
+    .findElement(By.css("input[name='mainContactDateOfBirth[day]']"))
+    .sendKeys("01");
+  await driver
+    .findElement(By.css("input[name='mainContactDateOfBirth[month]']"))
+    .sendKeys("02");
+  await driver
+    .findElement(By.css("input[name='mainContactDateOfBirth[year]']"))
+    .sendKeys("1976");
+
+  await lookupTestAddress(driver, 3);
+
+  await driver
+    .findElement(By.id("option-mainContactAddressHistory-yes"))
+    .click();
+
+  await driver
+    .findElement(By.id("field-mainContactEmail"))
+    .sendKeys(faker.internet.exampleEmail());
+
+  await driver
+    .findElement(By.id("field-mainContactPhone"))
+    .sendKeys("0345 4 10 20 30");
+
+  await submitStep(driver);
+}
+
+async function sectionBankDetails(driver) {
+  await driver
+    .wait(until.elementLocated(By.id("field-bankAccountName")))
+    .sendKeys("Example organisation");
+
+  await driver.findElement(By.id("field-bankSortCode")).sendKeys("308087");
+  await driver
+    .findElement(By.id("field-bankAccountNumber"))
+    .sendKeys("25337846");
+
+  await submitStep(driver);
+
+  await driver.wait(until.titleContains("Bank statement"));
 }
 
 /**
@@ -224,38 +329,11 @@ module.exports = async function awardsForAll(driver) {
   await cookieButton.click();
 
   await login(driver);
-  await submitStep(driver);
-
-  await stepProjectDetails(driver);
-  await submitStep(driver);
-
-  await stepProjectCountry(driver);
-  await submitStep(driver);
-
-  await stepProjectLocation(driver);
-  await submitStep(driver);
-
-  await stepYourIdea(driver);
-  await submitStep(driver);
-
-  await stepProjectCosts(driver);
-  await submitStep(driver);
-
-  await stepBeneficiaries(driver);
-  await submitStep(driver);
-
-  await stepOrganisationDetails(driver);
-  await submitStep(driver);
-
-  await stepOrganisationType(driver);
-  await submitStep(driver);
-
-  await stepOrganisationFinances(driver);
-  await submitStep(driver);
-
-  await stepSeniorContact(driver);
-  await submitStep(driver);
-
-  await driver.wait(until.titleContains("Main contact"));
+  await sectionProject(driver);
+  await sectionBeneficiaries(driver);
+  await sectionOrganisation(driver);
+  await sectionSeniorContact(driver);
+  await sectionMainContact(driver);
+  await sectionBankDetails(driver);
   await driver.sleep(1000);
 };
