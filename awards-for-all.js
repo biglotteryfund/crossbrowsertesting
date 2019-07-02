@@ -1,4 +1,5 @@
 "use strict";
+const path = require("path");
 const { By, until } = require("selenium-webdriver");
 const faker = require("faker");
 const assert = require("assert");
@@ -301,7 +302,14 @@ async function sectionBankDetails(driver) {
 
   await submitStep(driver);
 
-  await driver.wait(until.titleContains("Bank statement"));
+  await driver.wait(until.elementLocated(By.id("field-bankStatement")));
+  const fileEl = await driver.findElement(By.id("field-bankStatement"));
+  await driver.executeScript("arguments[0].scrollIntoView();", fileEl);
+
+  const filePath = path.resolve(__dirname, "./example.pdf");
+  await fileEl.sendKeys(filePath);
+
+  await submitStep(driver);
 }
 
 /**
@@ -335,5 +343,6 @@ module.exports = async function awardsForAll(driver) {
   await sectionSeniorContact(driver);
   await sectionMainContact(driver);
   await sectionBankDetails(driver);
+  await driver.wait(until.titleContains("Terms and conditions"));
   await driver.sleep(1000);
 };
