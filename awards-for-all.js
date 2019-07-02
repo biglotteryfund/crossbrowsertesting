@@ -1,6 +1,8 @@
 "use strict";
 const path = require("path");
 const { By, until } = require("selenium-webdriver");
+const remote = require("selenium-webdriver/remote");
+
 const faker = require("faker");
 const assert = require("assert");
 
@@ -302,12 +304,35 @@ async function sectionBankDetails(driver) {
 
   await submitStep(driver);
 
+  if (process.env.CI) {
+    await driver.setFileDetector(new remote.FileDetector());
+  }
+
   await driver.wait(until.elementLocated(By.id("field-bankStatement")));
   const fileEl = await driver.findElement(By.id("field-bankStatement"));
   await driver.executeScript("arguments[0].scrollIntoView();", fileEl);
 
   const filePath = path.resolve(__dirname, "./example.pdf");
   await fileEl.sendKeys(filePath);
+
+  await submitStep(driver);
+}
+
+async function sectionTerms(driver) {
+  const firstEl = await driver.wait(
+    until.elementLocated(By.id("field-termsAgreement1-1"))
+  );
+  await driver.executeScript("arguments[0].scrollIntoView();", firstEl);
+  await firstEl.click();
+
+  await driver.findElement(By.id("field-termsAgreement2-1")).click();
+  await driver.findElement(By.id("field-termsAgreement3-1")).click();
+  await driver.findElement(By.id("field-termsAgreement4-1")).click();
+
+  await driver
+    .findElement(By.id("field-termsPersonName"))
+    .sendKeys("Example person");
+  await driver.findElement(By.id("field-termsPersonPosition")).sendKeys("CEO");
 
   await submitStep(driver);
 }
@@ -343,6 +368,12 @@ module.exports = async function awardsForAll(driver) {
   await sectionSeniorContact(driver);
   await sectionMainContact(driver);
   await sectionBankDetails(driver);
-  await driver.wait(until.titleContains("Terms and conditions"));
+  await sectionTerms(driver);
+
+  const headingSelector = "h2.submit-actions__title";
+  await driver.wait(until.elementLocated(By.css(headingSelector)));
+  const text = await driver.findElement(By.css(headingSelector)).getText();
+  assert(text.includes("All sections are complete"), "Sections complete");
+
   await driver.sleep(1000);
 };
