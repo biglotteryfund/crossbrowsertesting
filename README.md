@@ -1,6 +1,7 @@
 # crossbrowsertesting.com automated tests
 
-Runs a suite of automated tests against crossbrowsertesting.com
+
+Runs a suite of automated tests for The National Lottery Community Fund website against crossbrowsertesting.com
 
 ## Getting started
 

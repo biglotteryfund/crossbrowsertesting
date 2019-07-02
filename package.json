@@ -1,15 +1,13 @@
 {
-  "name": "crossbrowsertesting-v2",
+  "name": "tnlcf-crossbrowsertesting",
+  "description": "crossbrowsertesting.com scripts",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
   "main": "index.js",
   "scripts": {
     "test": "node index.js",
     "format": "npx prettier --write *.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "dependencies": {
     "dotenv": "^8.0.0",
     "faker": "^4.1.0",
