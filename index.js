@@ -2,6 +2,7 @@
 require("dotenv").config();
 const { Builder } = require("selenium-webdriver");
 const request = require("request");
+const awardsForAll = require("./awards-for-all");
 
 function setScore(sessionId, score) {
   return new Promise((resolve, reject) => {
@@ -37,67 +38,23 @@ function setScore(sessionId, score) {
   });
 }
 
-async function startTest(driver, suiteFn) {
-  driver.getSession().then(async function(session) {
-    const sessionId = session.id_;
-    console.log("Session ID: ", sessionId);
-    if (process.env.CI) {
-      console.log(
-        "See your test run at: https://app.crossbrowsertesting.com/selenium/" +
-          sessionId
-      );
-    }
+async function remoteTest(name, suiteFn) {
+  console.log(`Starting remote test: ${name}`);
 
-    try {
-      await suiteFn(driver);
-
-      setScore(sessionId, "pass").then(function() {
-        console.log("SUCCESS! set score to pass");
-      });
-
-      driver.quit();
-    } catch (err) {
-      console.error("Something went wrong!\n", err.stack, "\n");
-      driver.quit();
-
-      setScore(sessionId, "fail")
-        .then(function() {
-          console.log("FAILURE! set score to fail");
-          process.exit(1);
-        })
-        .catch(scoreErr => {
-          console.error("Failed to set status!\n", scoreErr.stack, "\n");
-          process.exit(1);
-        });
-    }
-  });
-}
-
-const awardsForAll = require("./awards-for-all");
-
-if (process.env.CI) {
   const browserVersions = [
-    {
-      browserName: "Chrome",
-      platform: "Windows 10"
-    },
-    {
-      browserName: "Edge",
-      platform: "Windows 10"
-    },
-    {
-      browserName: "Internet Explorer",
-      version: "11",
-      platform: "Windows 8.1"
-    }
+    { browserName: "Chrome", platform: "Windows 10" },
+    { browserName: "Edge", platform: "Windows 10" },
+    { browserName: "Internet Explorer", version: "11", platform: "Windows 8.1" }
   ];
 
   browserVersions.forEach(browser => {
     const driver = new Builder()
       .usingServer("http://hub.crossbrowsertesting.com:80/wd/hub")
       .withCapabilities({
-        name: "Awards for all",
-        build: process.env.TRAVIS_BUILD_NUMBER ? `CI-BUILD-${process.env.TRAVIS_BUILD_NUMBER}` : "dev",
+        name: name,
+        build: process.env.TRAVIS_BUILD_NUMBER
+          ? `CI-BUILD-${process.env.TRAVIS_BUILD_NUMBER}`
+          : "dev",
         browserName: browser.browserName,
         version: browser.version ? browser.version : null,
         platform: browser.platform,
@@ -109,13 +66,50 @@ if (process.env.CI) {
       })
       .build();
 
-    console.log(
-      `Starting test for ${browser.browserName} on ${browser.platform}`
-    );
-    startTest(driver, awardsForAll);
+    driver.getSession().then(async function(session) {
+      const testUrl = `https://app.crossbrowsertesting.com/selenium/${session.id_}`;
+      console.log(
+        `Starting test for ${browser.browserName} on ${browser.platform}: ${testUrl}`
+      );
+
+      try {
+        await suiteFn(driver);
+        driver.quit();
+
+        setScore(session.id_, "pass")
+          .then(function() {
+            console.log("SUCCESS! set score to pass");
+          })
+          .catch(scoreErr => {
+            console.error("Failed to set status!\n", scoreErr.stack, "\n");
+            process.exit(1);
+          });
+      } catch (err) {
+        console.error("Something went wrong!\n", err.stack, "\n");
+        driver.quit();
+
+        setScore(session.id_, "fail")
+          .then(function() {
+            console.log("FAILURE! set score to fail");
+            process.exit(1);
+          })
+          .catch(scoreErr => {
+            console.error("Failed to set status!\n", scoreErr.stack, "\n");
+            process.exit(1);
+          });
+      }
+    });
   });
-} else {
+}
+
+async function localTest(name, suiteFn) {
   const driver = new Builder().forBrowser("safari").build();
-  console.log("Starting local test");
-  startTest(driver, awardsForAll);
+  console.log(`Starting local test: ${name}`);
+  suiteFn(driver);
+}
+
+if (process.env.CI) {
+  remoteTest("Awards for all", awardsForAll);
+} else {
+  localTest("Awards for all", awardsForAll);
 }
