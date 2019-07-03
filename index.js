@@ -83,7 +83,6 @@ if (process.env.CI) {
     },
     {
       browserName: "Edge",
-      version: "18",
       platform: "Windows 10"
     },
     {
