@@ -2,7 +2,7 @@
 const assert = require("assert");
 const path = require("path");
 const faker = require("faker");
-const { By, until } = require("selenium-webdriver");
+const { By, until, Key } = require("selenium-webdriver");
 const remote = require("selenium-webdriver/remote");
 
 async function submitStep(driver) {
@@ -129,11 +129,6 @@ async function sectionProject(driver) {
 }
 
 async function sectionBeneficiaries(driver) {
-  await driver
-    .wait(until.elementLocated(By.id("field-beneficiariesGroupsCheck-1")))
-    .click();
-
-  await submitStep(driver);
 
   await driver
     .wait(until.elementLocated(By.css("input[value='gender']")))
@@ -179,6 +174,9 @@ async function lookupTestAddress(driver, selectItem = 1) {
       By.css(`#address-selection option:nth-child(${selectItem + 1})`)
     )
     .click();
+
+  // trigger the blur event on the form field (eg. to set the address)
+  await addressSelect.sendKeys(Key.TAB);
 }
 
 async function sectionOrganisation(driver) {
