@@ -106,7 +106,7 @@ async function stepProjectCosts(driver) {
     .findElement(By.css(".ff-budget__total-amount"))
     .getText();
 
-  assert(text === "£4,000", "Cost matches items");
+  assert(text.trim() === "£4,000", "Cost matches items");
 
   await driver.findElement(By.id("field-projectTotalCosts")).sendKeys("20000");
 }
@@ -129,6 +129,11 @@ async function sectionProject(driver) {
 }
 
 async function sectionBeneficiaries(driver) {
+  await driver
+    .wait(until.elementLocated(By.id("field-beneficiariesGroupsCheck-2")))
+    .click();
+
+  await submitStep(driver);
 
   await driver
     .wait(until.elementLocated(By.css("input[value='gender']")))
@@ -177,6 +182,7 @@ async function lookupTestAddress(driver, selectItem = 1) {
 
   // trigger the blur event on the form field (eg. to set the address)
   await addressSelect.sendKeys(Key.TAB);
+  await driver.findElement(By.css("body")).click();
 }
 
 async function sectionOrganisation(driver) {
@@ -354,6 +360,14 @@ module.exports = async function awardsForAll(driver) {
   await cookieButton.click();
 
   await login(driver);
+
+  await driver.wait(until.titleContains("Summary"));
+
+  // @TODO: Need a stable selector on the start button so we can use that rather than URL
+  await driver.get(
+    `${process.env.TEST_BASE_URL}/apply/awards-for-all/your-project/1`
+  );
+
   await sectionProject(driver);
   await sectionBeneficiaries(driver);
   await sectionOrganisation(driver);
