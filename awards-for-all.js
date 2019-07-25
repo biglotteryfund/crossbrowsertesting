@@ -363,13 +363,10 @@ module.exports = async function awardsForAll(driver) {
 
   await driver.wait(until.titleContains("Summary"));
 
-  await driver
-    .wait(
-      until.elementLocated(
-        By.xpath("//a[contains(text(), 'Start your application')]")
-      )
-    )
-    .click();
+  // @TODO: Need a stable selector on the start button so we can use that rather than URL
+  await driver.get(
+    `${process.env.TEST_BASE_URL}/apply/awards-for-all/your-project/1`
+  );
 
   await sectionProject(driver);
   await sectionBeneficiaries(driver);
