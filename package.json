@@ -6,16 +6,16 @@
   "main": "index.js",
   "scripts": {
     "test": "node index.js",
-    "format": "npx prettier --write *.js"
+    "format": "eslint . && npx prettier --write *.js"
   },
   "dependencies": {
-    "dotenv": "^8.0.0",
+    "dotenv": "^8.2.0",
     "faker": "^4.1.0",
     "request": "^2.88.0",
-    "selenium-webdriver": "^4.0.0-alpha.4"
+    "selenium-webdriver": "^4.0.0-alpha.5"
   },
   "devDependencies": {
-    "eslint": "^6.1.0",
+    "eslint": "^6.6.0",
     "prettier": "^1.18.2"
   }
 }
