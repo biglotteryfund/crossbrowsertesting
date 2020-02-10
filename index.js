@@ -103,7 +103,7 @@ async function remoteTest(name, suiteFn) {
 }
 
 async function localTest(name, suiteFn) {
-  const driver = new Builder().forBrowser("safari").build();
+  const driver = new Builder().forBrowser("chrome").build();
   console.log(`Starting local test: ${name}`);
   suiteFn(driver);
 }
