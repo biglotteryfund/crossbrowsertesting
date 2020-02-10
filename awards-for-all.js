@@ -6,9 +6,7 @@ const { By, until, Key } = require("selenium-webdriver");
 const remote = require("selenium-webdriver/remote");
 
 async function submitStep(driver) {
-  await driver
-    .findElement(By.css('.form-actions input[type="submit"]'))
-    .click();
+  await driver.findElement(By.css('.form-actions [type="submit"]')).click();
 }
 
 async function login(driver) {
@@ -23,30 +21,10 @@ async function login(driver) {
   await submitStep(driver);
 }
 
-async function stepProjectDetails(driver) {
+async function stepProjectName(driver) {
   await driver
     .wait(until.elementLocated(By.id("field-projectName")))
     .sendKeys("My Application");
-
-  await driver
-    .findElement(By.css("input[name='projectDateRange[startDate][day]']"))
-    .sendKeys("1");
-  await driver
-    .findElement(By.css("input[name='projectDateRange[startDate][month]']"))
-    .sendKeys("6");
-  await driver
-    .findElement(By.css("input[name='projectDateRange[startDate][year]']"))
-    .sendKeys("2020");
-
-  await driver
-    .findElement(By.css("input[name='projectDateRange[endDate][day]']"))
-    .sendKeys("1");
-  await driver
-    .findElement(By.css("input[name='projectDateRange[endDate][month]']"))
-    .sendKeys("6");
-  await driver
-    .findElement(By.css("input[name='projectDateRange[endDate][year]']"))
-    .sendKeys("2020");
 }
 
 async function stepProjectCountry(driver) {
@@ -59,7 +37,7 @@ async function stepProjectLocation(driver) {
   await driver
     .wait(
       until.elementLocated(
-        By.css("#field-projectLocation > optgroup > option[value=highlands]")
+        By.css("#field-projectLocation > optgroup > option[value=highland]")
       )
     )
     .click();
@@ -69,6 +47,29 @@ async function stepProjectLocation(driver) {
     .sendKeys(faker.lorem.sentence());
 
   await driver.findElement(By.id("field-projectPostcode")).sendKeys("KW8 6JF");
+}
+
+async function stepProjectDates(driver) {
+  await driver
+    .wait(until.elementLocated(By.css("input[name='projectStartDate[day]']")))
+    .sendKeys("1");
+
+  await driver
+    .findElement(By.css("input[name='projectStartDate[month]']"))
+    .sendKeys("6");
+  await driver
+    .findElement(By.css("input[name='projectStartDate[year]']"))
+    .sendKeys("2020");
+
+  await driver
+    .findElement(By.css("input[name='projectEndDate[day]']"))
+    .sendKeys("1");
+  await driver
+    .findElement(By.css("input[name='projectEndDate[month]']"))
+    .sendKeys("6");
+  await driver
+    .findElement(By.css("input[name='projectEndDate[year]']"))
+    .sendKeys("2020");
 }
 
 async function stepYourIdea(driver) {
@@ -112,13 +113,16 @@ async function stepProjectCosts(driver) {
 }
 
 async function sectionProject(driver) {
-  await stepProjectDetails(driver);
+  await stepProjectName(driver);
   await submitStep(driver);
 
   await stepProjectCountry(driver);
   await submitStep(driver);
 
   await stepProjectLocation(driver);
+  await submitStep(driver);
+
+  await stepProjectDates(driver);
   await submitStep(driver);
 
   await stepYourIdea(driver);
@@ -189,6 +193,10 @@ async function sectionOrganisation(driver) {
   await driver
     .wait(until.elementLocated(By.id("field-organisationLegalName")))
     .sendKeys(faker.company.companyName());
+
+  await driver
+    .findElement(By.id("field-organisationHasDifferentTradingName-2"))
+    .click();
 
   await driver
     .findElement(By.css("input[name='organisationStartDate[month]']"))
